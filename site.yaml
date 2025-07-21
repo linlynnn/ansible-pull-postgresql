@@ -1,0 +1,38 @@
+- name: Install and Configure PostgreSQL
+  hosts: localhost
+  become: yes
+  vars:
+    pg_user: myuser
+    pg_password: mypassword
+
+  tasks:
+    - name: Install PostgreSQL
+      apt:
+        name: postgresql
+        state: present
+        update_cache: yes
+
+    - name: Ensure PostgreSQL is started and enabled
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Ensure PostgreSQL Python libraries are installed (required for Ansible PostgreSQL modules)
+      apt:
+        name: python3-psycopg2
+        state: present
+
+    - name: Create PostgreSQL User
+      become_user: postgres
+      postgresql_user:
+        name: "{{ pg_user }}"
+        password: "{{ pg_password }}"
+        role_attr_flags: CREATEDB
+
+    - name: Create Database (optional)
+      become_user: postgres
+      postgresql_db:
+        name: mydatabase
+        owner: "{{ pg_user }}"
+
