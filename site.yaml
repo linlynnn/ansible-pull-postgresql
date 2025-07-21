@@ -1,3 +1,76 @@
+- name: Install Docker on Ubuntu using official Docker repository
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install additional prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - gnupg
+        state: present
+
+    - name: Remove old Docker packages if present
+      apt:
+        name:
+          - docker.io
+          - docker-doc
+          - docker-compose
+          - docker-compose-v2
+          - podman-docker
+          - containerd
+          - runc
+        state: absent
+        purge: yes
+        autoremove: yes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Create directory for Docker GPG key
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+        state: present
+        filename: docker
+
+    - name: Update apt cache after adding Docker repo
+      apt:
+        update_cache: yes
+
+    - name: Install Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Restart Docker to apply config
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+
 - name: Run PostgreSQL using Docker
   hosts: localhost
   become: yes
@@ -9,18 +82,6 @@
     pg_port: 5432
 
   tasks:
-    - name: Install Docker
-      apt:
-        name: docker.io
-        state: present
-        update_cache: yes
-
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
-        enabled: true
-
     - name: Pull PostgreSQL image
       docker_image:
         name: postgres
@@ -43,7 +104,7 @@
 
     - name: Wait for PostgreSQL to become available
       wait_for:
-        host: "127.0.0.1"
+        host: "0.0.0.0"
         port: "{{ pg_port }}"
         timeout: 30
 
