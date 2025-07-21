@@ -70,7 +70,6 @@
       ansible.builtin.systemd:
         name: docker
         state: restarted
-
 - name: Run PostgreSQL using Docker
   hosts: localhost
   become: yes
