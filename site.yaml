@@ -1,6 +1,12 @@
 - name: Install Docker on Ubuntu using official Docker repository
   hosts: localhost
   become: yes
+  vars:
+    pg_user: myuser
+    pg_password: mypassword
+    pg_database: mydatabase
+    pg_container_name: postgres_db
+    pg_port: 5432
   tasks:
     - name: Install additional prerequisite packages
       apt:
@@ -70,17 +76,7 @@
       ansible.builtin.systemd:
         name: docker
         state: restarted
-- name: Run PostgreSQL using Docker
-  hosts: localhost
-  become: yes
-  vars:
-    pg_user: myuser
-    pg_password: mypassword
-    pg_database: mydatabase
-    pg_container_name: postgres_db
-    pg_port: 5432
-
-  tasks:
+        
     - name: Pull PostgreSQL image
       docker_image:
         name: postgres
@@ -106,7 +102,3 @@
         host: "0.0.0.0"
         port: "{{ pg_port }}"
         timeout: 30
-
-  volumes:
-    pgdata: {}
-
