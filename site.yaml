@@ -1,12 +1,6 @@
 - name: Install Docker on Ubuntu using official Docker repository
   hosts: localhost
   become: yes
-  vars:
-    pg_user: myuser
-    pg_password: mypassword
-    pg_database: mydatabase
-    pg_container_name: postgres_db
-    pg_port: 5432
   tasks:
     - name: Install additional prerequisite packages
       apt:
